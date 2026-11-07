@@ -44,10 +44,7 @@
     .section-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:13px}
     h2{margin:0;font-size:18px;font-weight:800}
     .count-chip{font-size:12px;color:#bdd2e6;background:#1c2b43;border:1px solid var(--border);padding:6px 10px;border-radius:50px}
-    .filters{display:flex;gap:8px;margin-bottom:17px;overflow:auto;scrollbar-width:none}
-    .filters::-webkit-scrollbar{display:none}
-    .filter{white-space:nowrap;border-radius:100px;border:1px solid #34455f;background:transparent;color:#a8bad0;padding:9px 15px;font-size:13px;font-weight:700}
-    .filter[aria-pressed="true"]{color:#0c3328;background:var(--green);border-color:var(--green)}
+
     .category-head{display:flex;align-items:center;gap:9px;font-size:13px;color:#9fc0ca;font-weight:800;margin:19px 2px 10px}
     .category-head:after{content:"";height:1px;background:#273b50;flex:1}
     .items{display:grid;gap:9px}
@@ -108,7 +105,6 @@
 
     <section aria-label="持ち物リスト">
       <div class="section-head"><h2>持ち物リスト</h2><span id="remainingChip" class="count-chip">残り 0 個</span></div>
-      <nav class="filters" aria-label="表示切替"><button type="button" class="filter" data-filter="all" aria-pressed="true">すべて</button><button type="button" class="filter" data-filter="remaining" aria-pressed="false">未チェック</button><button type="button" class="filter" data-filter="checked" aria-pressed="false">チェック済み</button></nav>
       <div id="list" aria-live="polite"></div>
     </section>
 
@@ -116,7 +112,7 @@
       <h2>データの管理</h2><p>持ち物とチェック状態は、この端末のブラウザに保存されます。ホーム画面から起動したアプリ内に自動保存します。アプリ削除・サイトデータ消去に備えて、定期的なバックアップをおすすめします。</p>
       <div class="manage-buttons"><button type="button" id="exportBtn" class="secondary">↓ バックアップ保存</button><button type="button" id="importBtn" class="plain">↑ バックアップ復元</button><input type="file" id="importFile" accept="application/json,.json" hidden></div>
     </section>
-    <footer class="foot">GYM READY PWA v2.0 ・ オフライン対応 ・ 端末内保存</footer>
+    <footer class="foot">GYM READY PWA v2.1 ・ オフライン対応 ・ 端末内保存</footer>
   </main>
 
   <div id="overlay" class="overlay" hidden>
@@ -164,7 +160,6 @@
       save(items){localStorage.setItem(STORAGE_KEY, JSON.stringify(items));}
     };
     let items = [];
-    let filter = 'all';
     let editId = null;
     let toastTimer;
     let storageFailed = false;
@@ -180,10 +175,9 @@
       $('remainingChip').textContent=`残り ${left} 個`;$('progressFill').style.width=`${pct}%`;
       $('progressBar').setAttribute('aria-valuenow',String(pct));
       $('progressMessage').textContent=total===0?'まずは持ち物を追加しましょう。':left===0?'準備完了！いってらっしゃい 🎉':`あと ${left} 個で準備完了！`;
-      document.querySelectorAll('[data-filter]').forEach(b=>b.setAttribute('aria-pressed', String(b.dataset.filter===filter)));
-      const displayed=items.filter(x=>filter==='all'||(filter==='remaining'?!x.checked:x.checked));
+      const displayed=items;
       const list=$('list');list.innerHTML='';
-      if(!displayed.length){list.innerHTML=`<div class="empty">${items.length===0?'持ち物がまだありません。<br>「＋ 持ち物を追加」から登録しましょう。':'この表示に該当する持ち物はありません。'}</div>`;return;}
+      if(!displayed.length){list.innerHTML=`<div class="empty">${items.length===0?'持ち物がまだありません。<br>「＋ 持ち物を追加」から登録しましょう。':'持ち物がありません。'}</div>`;return;}
       for(const category of CATEGORIES){
         const group=displayed.filter(x=>x.category===category);
         if(!group.length)continue;
@@ -243,11 +237,10 @@
       item.checked=!item.checked;persist();render();
       if(items.length&&items.every(x=>x.checked))toast('すべて準備完了！🎉');
     });
-    document.querySelectorAll('[data-filter]').forEach(btn=>btn.addEventListener('click',()=>{filter=btn.dataset.filter;render();}));
     $('resetBtn').addEventListener('click',()=>{
       if(!items.some(x=>x.checked)){toast('チェック済みの持ち物はありません');return;}
       if(!confirm('すべてのチェックを外しますか？\n持ち物の登録はそのまま残ります。'))return;
-      items.forEach(x=>x.checked=false);filter='all';persist();render();toast('次回用にリセットしました');
+      items.forEach(x=>x.checked=false);persist();render();toast('次回用にリセットしました');
     });
     $('exportBtn').addEventListener('click',()=>{
       const backup={app:'gym-ready',version:1,exportedAt:new Date().toISOString(),items};
@@ -264,7 +257,7 @@
         if(backup?.app!=='gym-ready'||backup?.version!==1)throw new Error('GYM READYのバックアップではありません');
         const restored=normalize(backup.items);
         if(!confirm(`バックアップの持ち物 ${restored.length} 個で現在のリストを置き換えます。よろしいですか？`))return;
-        items=restored;filter='all';persist();render();toast('バックアップを復元しました');
+        items=restored;persist();render();toast('バックアップを復元しました');
       }catch(err){alert(`復元できませんでした。\n${err.message}`);}
     });
     try{
