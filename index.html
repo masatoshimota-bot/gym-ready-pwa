@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+  <meta name="theme-color" content="#0c1423">
+  <meta name="description" content="ジムに行く前の持ち物チェック。オフラインで使える自分専用アプリ。">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="GYM READY">
+  <title>GYM READY | ジム持ち物チェック</title>
+  <style>
+    :root{color-scheme:dark;--bg:#0c1423;--panel:#152238;--panel2:#1c2b43;--text:#f2f7ff;--muted:#9eafc4;--green:#49e2ab;--border:#293b55;--danger:#ff8891;--shadow:0 18px 50px rgba(0,0,0,.18)}
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html{background:var(--bg);scroll-behavior:smooth}
+    body{margin:0;min-height:100dvh;background:radial-gradient(circle at 84% -10%,#193853 0,transparent 36%),var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;font-size:16px}
+    button,input,select{font:inherit}
+    button{cursor:pointer;touch-action:manipulation}
+    button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--green);outline-offset:3px}
+    .app{max-width:620px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 24px) 18px calc(env(safe-area-inset-bottom) + 100px)}
+    .brand{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:22px}
+    .eyebrow{font-size:11px;letter-spacing:.18em;font-weight:800;color:var(--green)}
+    h1{font-size:25px;letter-spacing:-.035em;line-height:1.25;margin:7px 0 5px;font-weight:850}
+    .subtitle{font-size:13px;color:var(--muted);margin:0}
+    .logo{height:52px;width:52px;border:1px solid #3e756c;background:linear-gradient(145deg,#254c51,#172e42);color:var(--green);display:grid;place-items:center;border-radius:16px;font-size:28px;flex-shrink:0}
+    .progress-card{background:linear-gradient(145deg,#1a3542,#15263a 75%);border:1px solid #305361;border-radius:22px;padding:21px 20px 19px;box-shadow:var(--shadow)}
+    .progress-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+    .small-label{font-size:13px;color:#b0c7d2;font-weight:700}
+    .big-number{font-size:37px;font-weight:850;line-height:1.3;font-variant-numeric:tabular-nums;letter-spacing:-.055em;margin-top:3px}
+    .big-number small{font-size:19px;color:#a8c2ce;letter-spacing:0}
+    .percent{border:1px solid #386b67;background:#214a49;color:#85f3c5;padding:7px 11px;border-radius:50px;font-size:13px;font-weight:800}
+    .bar{margin-top:15px;width:100%;height:10px;background:#314b59;border-radius:100px;overflow:hidden}
+    .bar>div{height:100%;width:0;background:linear-gradient(90deg,#39d89b,#7af9ca);border-radius:inherit;transition:width .22s ease}
+    .progress-message{font-size:13px;color:#c4d7de;margin:11px 0 0}
+    .action-strip{display:flex;gap:10px;margin:17px 0 25px}
+    .primary,.secondary,.plain{min-height:49px;border-radius:14px;padding:0 14px;font-size:14px;font-weight:800}
+    .primary{background:var(--green);color:#073328;border:1px solid transparent}
+    .secondary{background:#1d2c43;color:#e4f0ff;border:1px solid #35475f}
+    .plain{background:transparent;border:1px solid var(--border);color:var(--muted)}
+    .action-strip button:first-child{flex:1.2}.action-strip button:last-child{flex:1}
+    .section-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:13px}
+    h2{margin:0;font-size:18px;font-weight:800}
+    .count-chip{font-size:12px;color:#bdd2e6;background:#1c2b43;border:1px solid var(--border);padding:6px 10px;border-radius:50px}
+    .filters{display:flex;gap:8px;margin-bottom:17px;overflow:auto;scrollbar-width:none}
+    .filters::-webkit-scrollbar{display:none}
+    .filter{white-space:nowrap;border-radius:100px;border:1px solid #34455f;background:transparent;color:#a8bad0;padding:9px 15px;font-size:13px;font-weight:700}
+    .filter[aria-pressed="true"]{color:#0c3328;background:var(--green);border-color:var(--green)}
+    .category-head{display:flex;align-items:center;gap:9px;font-size:13px;color:#9fc0ca;font-weight:800;margin:19px 2px 10px}
+    .category-head:after{content:"";height:1px;background:#273b50;flex:1}
+    .items{display:grid;gap:9px}
+    .item{display:flex;align-items:center;min-height:66px;gap:9px;background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:8px 9px 8px 7px}
+    .item.checked{background:#132a31;border-color:#2d5650}
+    .item-toggle{border:0;color:var(--text);background:none;display:flex;align-items:center;flex:1;gap:12px;text-align:left;min-height:48px;min-width:0;padding:3px 7px}
+    .tick{width:27px;height:27px;border-radius:9px;border:2px solid #68819c;display:grid;place-items:center;font-size:18px;color:#09291d;flex-shrink:0}
+    .checked .tick{border-color:var(--green);background:var(--green);font-weight:900}
+    .item-name{font-size:15px;font-weight:700;overflow-wrap:anywhere;line-height:1.4}
+    .checked .item-name{text-decoration:line-through;text-decoration-color:#759d97;color:#9eacae}
+    .item-edit{width:40px;height:43px;display:grid;place-items:center;border:0;background:transparent;color:#b2c6d9;border-radius:11px;font-size:19px;flex-shrink:0}
+    .empty{padding:37px 15px;text-align:center;background:#142239;border:1px dashed #38506b;border-radius:16px;color:#b3c4d5;font-size:14px;line-height:1.7}
+    .manage{margin-top:26px;padding-top:18px;border-top:1px solid #29384e}
+    .manage h2{font-size:15px;margin-bottom:8px}
+    .manage p{margin:0 0 13px;color:#879db5;font-size:12px;line-height:1.75}
+    .manage-buttons{display:flex;flex-wrap:wrap;gap:9px}
+    .manage-buttons button{font-size:12px;min-height:42px}
+    .connection{display:inline-flex;gap:6px;align-items:center;margin-top:6px;color:#9fc3d9;font-size:12px;font-weight:650}
+    .connection:before{content:"";width:7px;height:7px;border-radius:50%;background:#49e2ab}
+    .connection.offline:before{background:#ffc06a}
+    .install-hint{border:1px solid #325569;background:#122737;border-radius:14px;padding:13px 15px;margin:0 0 18px;color:#bdd5e6;font-size:13px;line-height:1.8}
+    .install-hint[hidden]{display:none}
+    .install-hint strong{color:#ebfff8}
+    .install-hint button{color:#8ef5ce;border:0;background:none;text-decoration:underline;font-size:13px;padding:0 3px}
+    .foot{text-align:center;font-size:11px;line-height:1.6;color:#698096;margin-top:24px}
+    .overlay{position:fixed;inset:0;background:rgba(3,9,19,.75);z-index:20;display:flex;align-items:flex-end;justify-content:center;padding:0;backdrop-filter:blur(4px)}
+    .overlay[hidden]{display:none}
+    .dialog{background:#17253b;border:1px solid #41516b;border-radius:24px 24px 0 0;width:100%;max-width:620px;padding:24px 20px calc(23px + env(safe-area-inset-bottom));box-shadow:0 -12px 70px #0008}
+    .dialog h2{font-size:20px;margin:0 0 19px}
+    .field-label{display:block;margin:13px 0 7px;font-size:12px;color:#b9cbe0;font-weight:800}
+    .field{width:100%;min-height:49px;border:1px solid #40546f;background:#0e1a2d;border-radius:12px;padding:10px 13px;color:#fff;font-size:16px;outline:none}
+    .field:focus{border-color:var(--green)}
+    .dialog-actions{display:flex;gap:8px;margin-top:22px}.dialog-actions button{flex:1}
+    .edit-tools{display:flex;gap:8px;margin-top:15px}.edit-tools button{flex:1;min-height:42px;font-size:12px}
+    .danger{color:var(--danger);border-color:#6c414c;background:#2d2534}
+    #toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom));background:#dbffed;color:#123c2b;border-radius:12px;font-size:13px;font-weight:750;padding:12px 17px;z-index:40;min-width:160px;text-align:center;box-shadow:0 10px 40px #0006;pointer-events:none}
+    #toast[hidden]{display:none}
+    @media(min-width:700px){.app{padding-top:40px}.overlay{align-items:center;padding:15px}.dialog{border-radius:23px;padding:25px}}
+    @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="brand">
+      <div><div class="eyebrow">GYM READY</div><h1>ジム持ち物チェック</h1><p class="subtitle">出発前に、忘れ物ゼロへ。</p><div id="connection" class="connection" aria-live="polite">接続状態を確認中</div></div>
+      <div class="logo" aria-hidden="true">✦</div>
+    </header>
+
+    <aside id="installHint" class="install-hint" hidden><strong>📲 ホーム画面に追加</strong><div>iPhoneのSafariで共有ボタン →「ホーム画面に追加」→「追加」。追加後はホーム画面のアイコンから起動すると、オフラインでも利用できます。</div><button type="button" id="hideHint">この案内を閉じる</button></aside>
+
+    <section class="progress-card" aria-label="準備状況">
+      <div class="progress-top"><div><div class="small-label">準備できた持ち物</div><div class="big-number"><span id="doneCount">0</span><small> / <span id="totalCount">0</span> 個</small></div></div><div id="percent" class="percent">0%</div></div>
+      <div class="bar" role="progressbar" aria-label="準備進捗" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progressBar"><div id="progressFill"></div></div>
+      <p class="progress-message" id="progressMessage">さあ、準備を始めましょう。</p>
+    </section>
+
+    <div class="action-strip"><button type="button" id="addBtn" class="primary">＋ 持ち物を追加</button><button type="button" id="resetBtn" class="secondary">↻ 次回用にリセット</button></div>
+
+    <section aria-label="持ち物リスト">
+      <div class="section-head"><h2>持ち物リスト</h2><span id="remainingChip" class="count-chip">残り 0 個</span></div>
+      <nav class="filters" aria-label="表示切替"><button type="button" class="filter" data-filter="all" aria-pressed="true">すべて</button><button type="button" class="filter" data-filter="remaining" aria-pressed="false">未チェック</button><button type="button" class="filter" data-filter="checked" aria-pressed="false">チェック済み</button></nav>
+      <div id="list" aria-live="polite"></div>
+    </section>
+
+    <section class="manage" aria-label="データの管理">
+      <h2>データの管理</h2><p>持ち物とチェック状態は、この端末のブラウザに保存されます。ホーム画面から起動したアプリ内に自動保存します。アプリ削除・サイトデータ消去に備えて、定期的なバックアップをおすすめします。</p>
+      <div class="manage-buttons"><button type="button" id="exportBtn" class="secondary">↓ バックアップ保存</button><button type="button" id="importBtn" class="plain">↑ バックアップ復元</button><input type="file" id="importFile" accept="application/json,.json" hidden></div>
+    </section>
+    <footer class="foot">GYM READY PWA v2.0 ・ オフライン対応 ・ 端末内保存</footer>
+  </main>
+
+  <div id="overlay" class="overlay" hidden>
+    <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="dialogTitle">
+      <h2 id="dialogTitle">持ち物を追加</h2>
+      <form id="editForm">
+        <label class="field-label" for="itemName">持ち物の名前</label><input class="field" type="text" id="itemName" maxlength="60" placeholder="例：プロテイン" required autocomplete="off">
+        <label class="field-label" for="itemCategory">カテゴリ</label>
+        <select class="field" id="itemCategory"><option value="必需品">必需品</option><option value="トレーニング">トレーニング</option><option value="シャワー・着替え">シャワー・着替え</option><option value="その他">その他</option></select>
+        <div class="edit-tools" id="editTools" hidden><button class="secondary" id="moveUp" type="button">↑ 前に移動</button><button class="secondary" id="moveDown" type="button">↓ 後に移動</button><button class="secondary danger" id="deleteBtn" type="button">削除</button></div>
+        <div class="dialog-actions"><button type="button" class="secondary" id="cancelBtn">キャンセル</button><button type="submit" class="primary" id="saveBtn">保存する</button></div>
+      </form>
+    </section>
+  </div>
+  <div id="toast" hidden role="status" aria-live="polite"></div>
+
+  <script>
+  (() => {
+    'use strict';
+    // このストレージ層を将来 Capacitor Preferences 等に差し替え可能。
+    const STORAGE_KEY = 'gym-ready.items.v1';
+    const CATEGORIES = ['必需品','トレーニング','シャワー・着替え','その他'];
+    const STARTER = [
+      ['スマートフォン','必需品'],['会員証・入館用カード','必需品'],['飲み物・水筒','必需品'],
+      ['イヤホン','必需品'],['トレーニングウェア','トレーニング'],['室内用シューズ','トレーニング'],
+      ['トレーニングタオル','トレーニング'],['着替え','シャワー・着替え'],
+      ['バスタオル','シャワー・着替え'],['シャンプー・ボディソープ','シャワー・着替え']
+    ];
+    const $ = id => document.getElementById(id);
+    const newId = () => typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `g${Date.now().toString(36)}${Math.random().toString(36).slice(2,9)}`;
+    const defaultItems = () => STARTER.map(([name,category]) => ({id:newId(),name,category,checked:false}));
+    const normalize = (data) => {
+      if (!Array.isArray(data) || data.length > 500) throw new Error('不正なデータ形式です');
+      const seen = new Set();
+      return data.map(x => {
+        if (!x || typeof x.name !== 'string' || !x.name.trim() || x.name.length > 60) throw new Error('持ち物名が正しくありません');
+        let id = typeof x.id === 'string' && x.id.length < 100 ? x.id : newId();
+        if (seen.has(id)) id = newId();
+        seen.add(id);
+        return {id,name:x.name.trim(),category:CATEGORIES.includes(x.category)?x.category:'その他',checked:x.checked===true};
+      });
+    };
+    const storage = {
+      load(){const raw = localStorage.getItem(STORAGE_KEY);return raw===null?null:normalize(JSON.parse(raw));},
+      save(items){localStorage.setItem(STORAGE_KEY, JSON.stringify(items));}
+    };
+    let items = [];
+    let filter = 'all';
+    let editId = null;
+    let toastTimer;
+    let storageFailed = false;
+    const toast = (message) => {const el=$('toast');el.textContent=message;el.hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.hidden=true,2700);};
+    function persist(){
+      try {storage.save(items);storageFailed=false;}
+      catch(err){if(!storageFailed){alert('保存に失敗しました。ブラウザのストレージ設定・空き容量を確認してください。');storageFailed=true;}}
+    }
+    function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+    function render(){
+      const done=items.filter(x=>x.checked).length,total=items.length,left=total-done,pct=total?Math.round(done/total*100):0;
+      $('doneCount').textContent=done;$('totalCount').textContent=total;$('percent').textContent=`${pct}%`;
+      $('remainingChip').textContent=`残り ${left} 個`;$('progressFill').style.width=`${pct}%`;
+      $('progressBar').setAttribute('aria-valuenow',String(pct));
+      $('progressMessage').textContent=total===0?'まずは持ち物を追加しましょう。':left===0?'準備完了！いってらっしゃい 🎉':`あと ${left} 個で準備完了！`;
+      document.querySelectorAll('[data-filter]').forEach(b=>b.setAttribute('aria-pressed', String(b.dataset.filter===filter)));
+      const displayed=items.filter(x=>filter==='all'||(filter==='remaining'?!x.checked:x.checked));
+      const list=$('list');list.innerHTML='';
+      if(!displayed.length){list.innerHTML=`<div class="empty">${items.length===0?'持ち物がまだありません。<br>「＋ 持ち物を追加」から登録しましょう。':'この表示に該当する持ち物はありません。'}</div>`;return;}
+      for(const category of CATEGORIES){
+        const group=displayed.filter(x=>x.category===category);
+        if(!group.length)continue;
+        const head=document.createElement('div');head.className='category-head';head.textContent=`${category}　${group.length} 個`;list.appendChild(head);
+        const rows=document.createElement('div');rows.className='items';
+        for(const item of group){
+          const row=document.createElement('div');row.className=`item${item.checked?' checked':''}`;
+          row.innerHTML=`<button type="button" class="item-toggle" data-toggle="${escapeHtml(item.id)}" aria-pressed="${item.checked}" aria-label="${escapeHtml(item.name)}を${item.checked?'未チェックに戻す':'チェックする'}"><span class="tick" aria-hidden="true">${item.checked?'✓':''}</span><span class="item-name">${escapeHtml(item.name)}</span></button><button type="button" class="item-edit" data-edit="${escapeHtml(item.id)}" aria-label="${escapeHtml(item.name)}を編集">⋯</button>`;
+          rows.appendChild(row);
+        }
+        list.appendChild(rows);
+      }
+    }
+    function openDialog(id=null){
+      editId=id;
+      const item=id?items.find(x=>x.id===id):null;
+      if(id&&!item)return;
+      $('dialogTitle').textContent=item?'持ち物を編集':'持ち物を追加';
+      $('saveBtn').textContent=item?'変更を保存':'追加する';
+      $('itemName').value=item?item.name:'';
+      $('itemCategory').value=item?item.category:'必需品';
+      $('editTools').hidden=!item;
+      $('overlay').hidden=false;
+      setTimeout(()=>$('itemName').focus(),120);
+    }
+    function closeDialog(){$('overlay').hidden=true;editId=null;}
+    function moveItem(direction){
+      const idx=items.findIndex(x=>x.id===editId);if(idx<0)return;
+      // カテゴリ内でのみ並び順を変更。画面上の順序と一致させる。
+      const same=items.map((x,i)=>x.category===items[idx].category?i:-1).filter(i=>i>=0);
+      const pos=same.indexOf(idx),other=same[pos+direction];
+      if(other===undefined){toast('これ以上移動できません');return;}
+      [items[idx],items[other]]=[items[other],items[idx]];persist();render();toast('並び順を変更しました');
+    }
+    $('addBtn').addEventListener('click',()=>openDialog());
+    $('cancelBtn').addEventListener('click',closeDialog);
+    $('overlay').addEventListener('click',e=>{if(e.target===$('overlay'))closeDialog();});
+    window.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('overlay').hidden)closeDialog();});
+    $('editForm').addEventListener('submit',e=>{
+      e.preventDefault();const name=$('itemName').value.trim(),category=$('itemCategory').value;
+      if(!name){$('itemName').focus();return;}
+      if(editId){const item=items.find(x=>x.id===editId);if(!item)return;item.name=name;item.category=category;toast('変更を保存しました');}
+      else{items.push({id:newId(),name,category,checked:false});toast('持ち物を追加しました');}
+      persist();closeDialog();render();
+    });
+    $('moveUp').addEventListener('click',()=>moveItem(-1));
+    $('moveDown').addEventListener('click',()=>moveItem(1));
+    $('deleteBtn').addEventListener('click',()=>{
+      const item=items.find(x=>x.id===editId);if(!item)return;
+      if(!confirm(`「${item.name}」を削除しますか？`))return;
+      items=items.filter(x=>x.id!==editId);persist();closeDialog();render();toast('削除しました');
+    });
+    $('list').addEventListener('click',e=>{
+      const edit=e.target.closest('[data-edit]');if(edit){openDialog(edit.dataset.edit);return;}
+      const btn=e.target.closest('[data-toggle]');if(!btn)return;
+      const item=items.find(x=>x.id===btn.dataset.toggle);if(!item)return;
+      item.checked=!item.checked;persist();render();
+      if(items.length&&items.every(x=>x.checked))toast('すべて準備完了！🎉');
+    });
+    document.querySelectorAll('[data-filter]').forEach(btn=>btn.addEventListener('click',()=>{filter=btn.dataset.filter;render();}));
+    $('resetBtn').addEventListener('click',()=>{
+      if(!items.some(x=>x.checked)){toast('チェック済みの持ち物はありません');return;}
+      if(!confirm('すべてのチェックを外しますか？\n持ち物の登録はそのまま残ります。'))return;
+      items.forEach(x=>x.checked=false);filter='all';persist();render();toast('次回用にリセットしました');
+    });
+    $('exportBtn').addEventListener('click',()=>{
+      const backup={app:'gym-ready',version:1,exportedAt:new Date().toISOString(),items};
+      const blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'});
+      const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`gym-ready-backup-${new Date().toISOString().slice(0,10)}.json`;
+      document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),10000);toast('バックアップを作成しました');
+    });
+    $('importBtn').addEventListener('click',()=>$('importFile').click());
+    $('importFile').addEventListener('change',async e=>{
+      const file=e.target.files?.[0];e.target.value='';if(!file)return;
+      try{
+        if(file.size>1024*1024)throw new Error('ファイルが大きすぎます');
+        const backup=JSON.parse(await file.text());
+        if(backup?.app!=='gym-ready'||backup?.version!==1)throw new Error('GYM READYのバックアップではありません');
+        const restored=normalize(backup.items);
+        if(!confirm(`バックアップの持ち物 ${restored.length} 個で現在のリストを置き換えます。よろしいですか？`))return;
+        items=restored;filter='all';persist();render();toast('バックアップを復元しました');
+      }catch(err){alert(`復元できませんでした。\n${err.message}`);}
+    });
+    try{
+      const loaded=storage.load();items=loaded===null?defaultItems():loaded;
+      if(loaded===null)persist();
+    }catch(err){
+      items=defaultItems();
+      alert('保存データを読み込めませんでした。元データを上書きしないため、今回は初期リストを一時表示します。バックアップをお持ちの場合は復元してください。');
+      // 読み込みに失敗したデータを、ここで上書きしない。
+    }
+    render();
+  })();
+  </script>
+  <script>
+  (() => {
+    'use strict';
+    const indicator=document.getElementById('connection');
+    const hint=document.getElementById('installHint');
+    const standalone=window.matchMedia('(display-mode: standalone)').matches || navigator.standalone===true;
+    const isiPhone=/iPhone|iPod/i.test(navigator.userAgent);
+    const isSafari=/Safari/i.test(navigator.userAgent) && !/CriOS|FxiOS|EdgiOS|OPiOS/i.test(navigator.userAgent);
+    const dismissed=sessionStorage.getItem('gym-ready.install-dismissed')==='1';
+    if(isiPhone && isSafari && !standalone && !dismissed)hint.hidden=false;
+    document.getElementById('hideHint').addEventListener('click',()=>{hint.hidden=true;sessionStorage.setItem('gym-ready.install-dismissed','1');});
+    function status(){
+      const offline=navigator.onLine===false;
+      indicator.classList.toggle('offline',offline);
+      indicator.textContent=offline?'オフライン：保存して使えます':'端末内に自動保存';
+    }
+    addEventListener('online',status);addEventListener('offline',status);status();
+    if('serviceWorker' in navigator && (location.protocol==='https:' || location.hostname==='localhost' || location.hostname==='127.0.0.1')){
+      addEventListener('load',()=>{
+        navigator.serviceWorker.register('./sw.js',{scope:'./'}).catch(err=>{
+          console.warn('オフライン準備に失敗:',err);
+          indicator.textContent='オフライン設定を確認してください';
+          indicator.classList.add('offline');
+        });
+      });
+    } else if(location.protocol==='file:') {
+      indicator.textContent='公開URLで開くとオフライン対応になります';
+      indicator.classList.add('offline');
+    }
+  })();
+  </script>
+</body>
+</html>
