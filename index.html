@@ -26,7 +26,7 @@
     h1{font-size:25px;letter-spacing:-.035em;line-height:1.25;margin:7px 0 5px;font-weight:850}
     .subtitle{font-size:13px;color:var(--muted);margin:0}
     .logo{height:52px;width:52px;border:1px solid #3e756c;background:linear-gradient(145deg,#254c51,#172e42);color:var(--green);display:grid;place-items:center;border-radius:16px;font-size:28px;flex-shrink:0}
-    .progress-card{background:linear-gradient(145deg,#1a3542,#15263a 75%);border:1px solid #305361;border-radius:22px;padding:21px 20px 19px;box-shadow:var(--shadow)}
+    .progress-card{position:sticky;top:calc(env(safe-area-inset-top) + 8px);z-index:10;background:linear-gradient(145deg,#1a3542,#15263a 75%);border:1px solid #305361;border-radius:22px;padding:21px 20px 19px;box-shadow:var(--shadow)}
     .progress-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
     .small-label{font-size:13px;color:#b0c7d2;font-weight:700}
     .big-number{font-size:37px;font-weight:850;line-height:1.3;font-variant-numeric:tabular-nums;letter-spacing:-.055em;margin-top:3px}
@@ -45,8 +45,6 @@
     h2{margin:0;font-size:18px;font-weight:800}
     .count-chip{font-size:12px;color:#bdd2e6;background:#1c2b43;border:1px solid var(--border);padding:6px 10px;border-radius:50px}
 
-    .category-head{display:flex;align-items:center;gap:9px;font-size:13px;color:#9fc0ca;font-weight:800;margin:19px 2px 10px}
-    .category-head:after{content:"";height:1px;background:#273b50;flex:1}
     .items{display:grid;gap:9px}
     .item{display:flex;align-items:center;min-height:66px;gap:9px;background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:8px 9px 8px 7px}
     .item.checked{background:#132a31;border-color:#2d5650}
@@ -89,7 +87,7 @@
 <body>
   <main class="app">
     <header class="brand">
-      <div><div class="eyebrow">GYM READY</div><h1>ジム持ち物チェック</h1><p class="subtitle">出発前に、忘れ物ゼロへ。</p><div id="connection" class="connection" aria-live="polite">接続状態を確認中</div></div>
+      <div><div class="eyebrow">GYM READY</div><h1>ジム持ち物チェック</h1><div id="connection" class="connection" aria-live="polite">接続状態を確認中</div></div>
       <div class="logo" aria-hidden="true">✦</div>
     </header>
 
@@ -109,10 +107,10 @@
     </section>
 
     <section class="manage" aria-label="データの管理">
-      <h2>データの管理</h2><p>持ち物とチェック状態は、この端末のブラウザに保存されます。ホーム画面から起動したアプリ内に自動保存します。アプリ削除・サイトデータ消去に備えて、定期的なバックアップをおすすめします。</p>
+      <h2>データの管理</h2>
       <div class="manage-buttons"><button type="button" id="exportBtn" class="secondary">↓ バックアップ保存</button><button type="button" id="importBtn" class="plain">↑ バックアップ復元</button><input type="file" id="importFile" accept="application/json,.json" hidden></div>
     </section>
-    <footer class="foot">GYM READY PWA v2.1 ・ オフライン対応 ・ 端末内保存</footer>
+    <footer class="foot">GYM READY PWA v2.2 ・ オフライン対応 ・ 端末内保存</footer>
   </main>
 
   <div id="overlay" class="overlay" hidden>
@@ -120,8 +118,6 @@
       <h2 id="dialogTitle">持ち物を追加</h2>
       <form id="editForm">
         <label class="field-label" for="itemName">持ち物の名前</label><input class="field" type="text" id="itemName" maxlength="60" placeholder="例：プロテイン" required autocomplete="off">
-        <label class="field-label" for="itemCategory">カテゴリ</label>
-        <select class="field" id="itemCategory"><option value="必需品">必需品</option><option value="トレーニング">トレーニング</option><option value="シャワー・着替え">シャワー・着替え</option><option value="その他">その他</option></select>
         <div class="edit-tools" id="editTools" hidden><button class="secondary" id="moveUp" type="button">↑ 前に移動</button><button class="secondary" id="moveDown" type="button">↓ 後に移動</button><button class="secondary danger" id="deleteBtn" type="button">削除</button></div>
         <div class="dialog-actions"><button type="button" class="secondary" id="cancelBtn">キャンセル</button><button type="submit" class="primary" id="saveBtn">保存する</button></div>
       </form>
@@ -178,18 +174,13 @@
       const displayed=items;
       const list=$('list');list.innerHTML='';
       if(!displayed.length){list.innerHTML=`<div class="empty">${items.length===0?'持ち物がまだありません。<br>「＋ 持ち物を追加」から登録しましょう。':'持ち物がありません。'}</div>`;return;}
-      for(const category of CATEGORIES){
-        const group=displayed.filter(x=>x.category===category);
-        if(!group.length)continue;
-        const head=document.createElement('div');head.className='category-head';head.textContent=`${category}　${group.length} 個`;list.appendChild(head);
-        const rows=document.createElement('div');rows.className='items';
-        for(const item of group){
-          const row=document.createElement('div');row.className=`item${item.checked?' checked':''}`;
-          row.innerHTML=`<button type="button" class="item-toggle" data-toggle="${escapeHtml(item.id)}" aria-pressed="${item.checked}" aria-label="${escapeHtml(item.name)}を${item.checked?'未チェックに戻す':'チェックする'}"><span class="tick" aria-hidden="true">${item.checked?'✓':''}</span><span class="item-name">${escapeHtml(item.name)}</span></button><button type="button" class="item-edit" data-edit="${escapeHtml(item.id)}" aria-label="${escapeHtml(item.name)}を編集">⋯</button>`;
-          rows.appendChild(row);
-        }
-        list.appendChild(rows);
+      const rows=document.createElement('div');rows.className='items';
+      for(const item of displayed){
+        const row=document.createElement('div');row.className=`item${item.checked?' checked':''}`;
+        row.innerHTML=`<button type="button" class="item-toggle" data-toggle="${escapeHtml(item.id)}" aria-pressed="${item.checked}" aria-label="${escapeHtml(item.name)}を${item.checked?'未チェックに戻す':'チェックする'}"><span class="tick" aria-hidden="true">${item.checked?'✓':''}</span><span class="item-name">${escapeHtml(item.name)}</span></button><button type="button" class="item-edit" data-edit="${escapeHtml(item.id)}" aria-label="${escapeHtml(item.name)}を編集">⋯</button>`;
+        rows.appendChild(row);
       }
+      list.appendChild(rows);
     }
     function openDialog(id=null){
       editId=id;
@@ -198,7 +189,6 @@
       $('dialogTitle').textContent=item?'持ち物を編集':'持ち物を追加';
       $('saveBtn').textContent=item?'変更を保存':'追加する';
       $('itemName').value=item?item.name:'';
-      $('itemCategory').value=item?item.category:'必需品';
       $('editTools').hidden=!item;
       $('overlay').hidden=false;
       setTimeout(()=>$('itemName').focus(),120);
@@ -206,10 +196,9 @@
     function closeDialog(){$('overlay').hidden=true;editId=null;}
     function moveItem(direction){
       const idx=items.findIndex(x=>x.id===editId);if(idx<0)return;
-      // カテゴリ内でのみ並び順を変更。画面上の順序と一致させる。
-      const same=items.map((x,i)=>x.category===items[idx].category?i:-1).filter(i=>i>=0);
-      const pos=same.indexOf(idx),other=same[pos+direction];
-      if(other===undefined){toast('これ以上移動できません');return;}
+      // カテゴリに関係なく、表示順をそのまま上下に移動する。
+      const other=idx+direction;
+      if(other<0 || other>=items.length){toast('これ以上移動できません');return;}
       [items[idx],items[other]]=[items[other],items[idx]];persist();render();toast('並び順を変更しました');
     }
     $('addBtn').addEventListener('click',()=>openDialog());
@@ -217,10 +206,10 @@
     $('overlay').addEventListener('click',e=>{if(e.target===$('overlay'))closeDialog();});
     window.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('overlay').hidden)closeDialog();});
     $('editForm').addEventListener('submit',e=>{
-      e.preventDefault();const name=$('itemName').value.trim(),category=$('itemCategory').value;
+      e.preventDefault();const name=$('itemName').value.trim();
       if(!name){$('itemName').focus();return;}
-      if(editId){const item=items.find(x=>x.id===editId);if(!item)return;item.name=name;item.category=category;toast('変更を保存しました');}
-      else{items.push({id:newId(),name,category,checked:false});toast('持ち物を追加しました');}
+      if(editId){const item=items.find(x=>x.id===editId);if(!item)return;item.name=name;toast('変更を保存しました');}
+      else{items.push({id:newId(),name,category:'その他',checked:false});toast('持ち物を追加しました');}
       persist();closeDialog();render();
     });
     $('moveUp').addEventListener('click',()=>moveItem(-1));

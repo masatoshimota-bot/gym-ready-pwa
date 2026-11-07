@@ -1,5 +1,5 @@
 /* GYM READY app shell: same-origin files only; no external network required. */
-const CACHE_NAME='gym-ready-pwa-v2-1-20261107';
+const CACHE_NAME='gym-ready-pwa-v2-2-20261107';
 const SHELL=['./','./index.html','./manifest.webmanifest','./icons/icon-192.png','./icons/icon-512.png','./icons/apple-touch-icon.png'];
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE_NAME).then(cache=>cache.addAll(SHELL)));
